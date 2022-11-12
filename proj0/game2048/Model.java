@@ -1,5 +1,6 @@
 package game2048;
 
+import java.util.Arrays;
 import java.util.Formatter;
 import java.util.Observable;
 
@@ -112,10 +113,9 @@ public class Model extends Observable {
         boolean changed;
         changed = false;
 
-        // TODO: Modify this.board (and perhaps this.score) to account
-        // for the tilt to the Side SIDE. If the board changed, set the
-        // changed local variable to true.
-
+        board.setViewingPerspective(side);
+        changed = combine();
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
@@ -123,14 +123,48 @@ public class Model extends Observable {
         return changed;
     }
 
-    /** Checks if the game is over and sets the gameOver variable
-     *  appropriately.
+    public boolean combine() {
+        boolean change = false;
+        for (int i = 0; i < board.size(); i++) {//handle the combine
+            for (int j = board.size() - 1; j >= 0; j--) {
+                if (board.tile(i, j) == null) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (board.tile(i, k) == null) continue;
+                    if (board.tile(i, k).value() == board.tile(i, j).value()) {
+                        board.move(i, j, board.tile(i, k));
+                        score += board.tile(i, j).value();
+                        change = true;
+                        break;
+                    } else break;
+                }
+            }
+        }
+        for (int i = 0; i < board.size(); i++) {//handle the move
+            for (int j = board.size() - 1; j >= 0; j--) {
+                if (board.tile(i, j) != null) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (board.tile(i, k) != null) {
+                        board.move(i, j, board.tile(i, k));
+                        change = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return change;
+    }
+
+    /**
+     * Checks if the game is over and sets the gameOver variable
+     * appropriately.
      */
     private void checkGameOver() {
         gameOver = checkGameOver(board);
     }
 
-    /** Determine whether game is over. */
+    /**
+     * Determine whether game is over.
+     */
     private static boolean checkGameOver(Board b) {
         return maxTileExists(b) || !atLeastOneMoveExists(b);
     }
